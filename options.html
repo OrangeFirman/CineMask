@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CineMask</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #0a0a0a;
+      --surface: #111111;
+      --surface2:#1a1a1a;
+      --border:  #2a2a2a;
+      --accent:  #e8c547;
+      --text:    #f0f0f0;
+      --muted:   #666666;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 284px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-weight: 300;
+      /* subtle film-grain noise */
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── Header ──────────────────────────────────────────────────────── */
+    .header {
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      fill: var(--accent);
+      filter: drop-shadow(0 0 4px rgba(232,197,71,0.45));
+    }
+    .header-wordmark {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 3px;
+      line-height: 1;
+    }
+    .header-wordmark span { color: var(--text); }
+    .header-wordmark em   { color: var(--accent); font-style: normal; }
+    .header-tagline {
+      font-size: 9.5px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    /* ── Section ─────────────────────────────────────────────────────── */
+    .section { padding: 13px 18px; }
+    .section + .section { border-top: 1px solid var(--border); }
+    .section-label {
+      font-size: 9px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* ── Site rows ───────────────────────────────────────────────────── */
+    .site-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+    }
+    .site-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: #b0b0b0;
+    }
+    .site-pip {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pip-imdb { background: #f5c518; }
+    .pip-rt   { background: #fa320a; }
+    .pip-lb   { background: #00b020; }
+    .pip-kp   { background: #ff6600; }
+    .pip-mc   { background: #6ac; }
+    .pip-google { background: #4285f4; }
+
+    /* Toggle */
+    .toggle { position: relative; width: 32px; height: 17px; flex-shrink: 0; }
+    .toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #2a2a2a;
+      border: 1px solid #333;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 11px; height: 11px;
+      background: #555;
+      top: 2px; left: 2px;
+      transition: transform 0.18s, background 0.18s;
+    }
+    .toggle input:checked + .slider { background: rgba(232,197,71,0.15); border-color: rgba(232,197,71,0.4); }
+    .toggle input:checked + .slider::before { transform: translateX(15px); background: var(--accent); }
+    .toggle input:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ── Mode buttons ────────────────────────────────────────────────── */
+    .mode-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .mode-btn {
+      padding: 11px 0 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+    }
+    .mode-btn:hover { border-color: #3a3a3a; color: #999; }
+    .mode-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(232,197,71,0.06);
+    }
+
+    /* Eye icon inside mode button */
+    .mode-eye {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+
+    /* Blur mode: the eye icon itself is blurred */
+    .mode-btn[data-mode="blur"] .mode-eye {
+      filter: blur(1.8px);
+    }
+    .mode-btn.active[data-mode="blur"] .mode-eye {
+      filter: blur(1.8px) drop-shadow(0 0 3px rgba(232,197,71,0.5));
+    }
+
+    /* Hide mode: grey-tinted eye-off icon */
+    .mode-btn[data-mode="hide"] .mode-eye {
+      opacity: 0.55;
+    }
+    .mode-btn.active[data-mode="hide"] .mode-eye {
+      opacity: 1;
+    }
+
+    .mode-hint {
+      margin-top: 9px;
+      font-size: 10px;
+      color: #444;
+      line-height: 1.5;
+      min-height: 14px;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-note {
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      color: #2e2e2e;
+      text-transform: uppercase;
+    }
+    .footer-reveal {
+      font-size: 9px;
+      color: #333;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Saved toast ─────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 9px;
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: var(--accent);
+      color: #111;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 4px 14px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 100;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────────────── -->
+  <div class="header">
+    <svg class="header-icon" viewBox="0 0 121.025 121.025" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1.35,64.212c7.9,9.9,31.4,36.3,59.2,36.3c27.8,0,51.3-26.399,59.2-36.3
+               c1.699-2.2,1.699-5.3,0-7.399c-7.9-9.9-31.4-36.3-59.2-36.3
+               c-27.8-0.1-51.3,26.3-59.2,36.2C-0.45,58.913-0.45,62.012,1.35,64.212z
+               M60.55,36.413c13.3,0,24,10.7,24,24s-10.7,24-24,24
+               c-13.3,0-24-10.7-24-24S47.25,36.413,60.55,36.413z"/>
+      <circle cx="60.55" cy="60.413" r="12"/>
+    </svg>
+    <div>
+      <div class="header-wordmark"><span>CINE</span><em>MASK</em></div>
+      <div class="header-tagline">Watch blind. Judge for yourself.</div>
+    </div>
+  </div>
+
+  <!-- ── Sites ───────────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">— Sites</div>
+
+    <div class="site-row">
+      <span class="site-label"><span class="site-pip pip-imdb"></span>IMDb</span>
+      <label class="toggle"><input type="checkbox" id="toggle-imdb"><span class="slider"></span></label>
+    </div>
+    <div class="site-row">
+      <span class="site-label"><span class="site-pip pip-rt"></span>Rotten Tomatoes</span>
+      <label class="toggle"><input type="checkbox" id="toggle-rottentomatoes"><span class="slider"></span></label>
+    </div>
+    <div class="site-row">
+      <span class="site-label"><span class="site-pip pip-lb"></span>Letterboxd</span>
+      <label class="toggle"><input type="checkbox" id="toggle-letterboxd"><span class="slider"></span></label>
+    </div>
+    <div class="site-row">
+      <span class="site-label"><span class="site-pip pip-kp"></span>Kinopoisk</span>
+      <label class="toggle"><input type="checkbox" id="toggle-kinopoisk"><span class="slider"></span></label>
+    </div>
+    <div class="site-row">
+      <span class="site-label"><span class="site-pip pip-mc"></span>Metacritic</span>
+      <label class="toggle"><input type="checkbox" id="toggle-metacritic"><span class="slider"></span></label>
+    </div>
+    <div class="site-row">
+      <span class="site-label"><span class="site-pip pip-google"></span>Google Search</span>
+      <label class="toggle"><input type="checkbox" id="toggle-google"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <!-- ── Display mode ────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">— Concealment</div>
+
+    <div class="mode-row">
+      <!-- Blur: yellow eye, blurred -->
+      <button class="mode-btn" data-mode="blur">
+        <svg class="mode-eye" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M8 12C8 9.79086 9.79086 8 12 8C14.2091 8 16 9.79086 16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12ZM6.24234 6.34315C9.36653 3.21895 14.4319 3.21895 17.556 6.34315L19.7239 8.511C20.3508 9.13781 20.8909 9.67788 21.2653 10.1685C21.6665 10.6944 21.9703 11.2792 21.9703 12C21.9703 12.7208 21.6665 13.3056 21.2653 13.8315C20.8909 14.3221 20.3508 14.8622 19.7239 15.489L17.556 17.6569C14.4319 20.781 9.36653 20.781 6.24234 17.6569L4.07447 15.489C3.44759 14.8622 2.90746 14.3221 2.5331 13.8315C2.1319 13.3056 1.82812 12.7208 1.82812 12C1.82812 11.2792 2.1319 10.6944 2.5331 10.1685C2.90746 9.67788 3.44759 9.13781 4.07447 8.51101L6.24234 6.34315Z"
+            fill="#e8c547"/>
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10Z"
+            fill="#e8c547"/>
+        </svg>
+        Blur
+      </button>
+
+      <!-- Hide: grey eye-off -->
+      <button class="mode-btn" data-mode="hide">
+        <svg class="mode-eye" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M8.58579 4.71633C11.5332 3.37594 15.1293 3.91627 17.5561 6.3431L20.5579 9.34489C20.5881 9.37504 20.6179 9.40485 20.6475 9.43436C21.0546 9.84043 21.4062 10.1912 21.6188 10.5908C22.0875 11.4718 22.0875 12.5282 21.6188 13.4091C21.4062 13.8087 21.0546 14.1595 20.6475 14.5655C20.6179 14.5951 20.5881 14.6249 20.5579 14.655L20.5059 14.7071C20.1154 15.0976 19.4822 15.0976 19.0917 14.7071C18.7011 14.3165 18.7011 13.6834 19.0917 13.2929L19.1437 13.2408C19.6921 12.6924 19.8007 12.5683 19.8532 12.4697C20.0094 12.176 20.0094 11.8239 19.8532 11.5302C19.8007 11.4316 19.6921 11.3075 19.1437 10.7591L16.1419 7.75732C14.3237 5.93914 11.627 5.53041 9.41372 6.53692C8.91098 6.76554 8.31809 6.54333 8.08946 6.04059C7.86084 5.53785 8.08305 4.94496 8.58579 4.71633Z"
+            fill="#666"/>
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M2.38203 4.51599C2.7211 4.08004 3.34938 4.00151 3.78533 4.34058L21.7853 18.3406C22.2213 18.6796 22.2998 19.3079 21.9607 19.7439C21.6217 20.1798 20.9934 20.2584 20.5574 19.9193L17.5965 17.6164L17.556 17.6569C14.4319 20.7811 9.36653 20.7811 6.24234 17.6569L4.07447 15.489C3.4476 14.8622 2.90746 14.3221 2.5331 13.8315C2.1319 13.3056 1.82812 12.7208 1.82812 12C1.82812 11.2792 2.1319 10.6944 2.5331 10.1685C2.90746 9.6779 3.44759 9.13783 4.07447 8.51102L4.86863 7.71687L2.55745 5.91928C2.1215 5.58021 2.04296 4.95194 2.38203 4.51599ZM12.7566 13.852L14.4455 15.1656C13.7694 15.6887 12.921 16 12 16C9.79086 16 8 14.2092 8 12C8 11.4344 8.11741 10.8962 8.32918 10.4084L10.0191 11.7228C10.0065 11.8134 10 11.906 10 12C10 13.1046 10.8954 14 12 14C12.2678 14 12.5232 13.9474 12.7566 13.852Z"
+            fill="#666"/>
+        </svg>
+        Hide
+      </button>
+    </div>
+
+    <p class="mode-hint" id="mode-hint"></p>
+  </div>
+
+  <!-- ── Footer ──────────────────────────────────────────────────────── -->
+  <div class="footer">
+    <span class="footer-note">Reload tab to apply changes</span>
+    <span class="footer-reveal">Click any score to reveal</span>
+  </div>
+
+  <div class="toast" id="toast">SAVED</div>
+
+  <script src="options.js"></script>
+</body>
+</html>
