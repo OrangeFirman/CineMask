@@ -1,12 +1,6 @@
 'use strict';
 
 // Kinopoisk content script.
-// Kinopoisk uses a heavy React/Next.js frontend with partially-hashed
-// class names. We use substring class matching ([class*="..."]) as a
-// fallback, plus any stable data attributes we can find.
-//
-// If selectors break after a Kinopoisk redesign, open DevTools on a
-// film page, inspect the gold rating number, and update accordingly.
 
 (async () => {
   const settings = await HideRatings.getSettings();
@@ -15,35 +9,36 @@
   const { mode } = settings;
 
   const selectors = [
-    // ── Film pages ─────────────────────────────────────────────────────
-    // KinoPoisk rating value (the gold number, e.g. "8.1")
-    '[class*="filmRatingValue"]',
-    '[class*="FilmRatingValue"]',
-    '[class*="styles_filmRating"]',
-    '[class*="FilmRating_filmRating"]',
+    // ── Film pages — main rating widget ───────────────────────────────
+    // Stable data-tid on the rating value element
+    '[data-tid="kp-movie-rating.rating-value"]',
 
-    // The full rating widget container (score + vote count)
-    '[class*="filmRatingWrap"]',
-    '[class*="FilmRatingWrap"]',
+    // The value container div (wraps number + vote count)
+    '[class*="ratingValue"][class*="styles_ratingValue"]',
 
-    // IMDb / critics scores sometimes shown alongside the KP score
-    '[class*="otherRating"]',
-    '[class*="OtherRating"]',
+    // Full rating block (number + sub-ratings like IMDb score beneath)
+    '[class*="styles_ratingContainer"]',
 
-    // ── Search results / cards ─────────────────────────────────────────
-    '[class*="ratingValue"]',
-    '[class*="RatingValue"]',
-    '[class*="rating__value"]',
-    '[class*="Rating__value"]',
+    // IMDb / critics sub-rating shown below the KP score
+    '[class*="styles_valueSection"]',
 
-    // Kinopoisk card rating badge
+    // ── Film cards / lists ─────────────────────────────────────────────
     '[class*="filmCard__rating"]',
     '[class*="FilmCard__rating"]',
     '[class*="filmCardRating"]',
+    '[class*="styles_filmRating"]',
+
+    // ── Search autocomplete dropdown ───────────────────────────────────
+    // The suggest item rating sits inside elements with these data-tids
+    '[data-tid="search-film-item-rating"]',
+    '[data-tid="search-suggest-rating"]',
+    // Fallback: rating spans directly inside suggest list items
+    // Uses specific suggest/header ancestor to avoid catching other UI
+    '[class*="styles_suggest"] [class*="styles_rating"]',
+    '[class*="Header_search"] [class*="styles_rating"]',
 
     // ── Older Kinopoisk layouts ────────────────────────────────────────
     '.film-rating-value',
-    '.rating-value',
     '#block_rating',
   ];
 

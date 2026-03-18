@@ -4,11 +4,18 @@
 
 /* Blur mode */
 .hr-blur {
-  filter: blur(7px) !important;
+  filter: blur(6px) !important;
   cursor: pointer !important;
   transition: filter 0.15s ease !important;
   user-select: none !important;
   border-radius: 3px;
+  /* Force block context so overflow clipping works */
+  display: inline-block !important;
+  /* Padding gives the blur radius room to fade inside the element boundary */
+  padding: 3px 5px !important;
+  margin: -3px -5px !important;
+  /* Clip the blur to the padded box */
+  overflow: hidden !important;
 }
 
 .hr-blur:hover {
